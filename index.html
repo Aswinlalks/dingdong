@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Soundboard</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+        }
+        
+        .soundboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        .sound-item {
+            background-color: white;
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+        }
+        
+        .sound-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .sound-item img {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+        
+        .sound-item p {
+            margin: 0;
+            font-weight: bold;
+            color: #444;
+        }
+        
+        .controls {
+            margin: 30px auto;
+            padding: 15px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+        }
+        
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 0 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #45a049;
+        }
+        
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .volume-control {
+            margin-top: 15px;
+        }
+        
+        input[type="range"] {
+            width: 200px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Interactive Soundboard</h1>
+    
+    <div class="controls">
+        <button id="stop-all">Stop All Sounds</button>
+        <button id="mute-all">Mute All</button>
+        <div class="volume-control">
+            <label for="volume">Volume:</label>
+            <input type="range" id="volume" min="0" max="1" step="0.1" value="0.7">
+        </div>
+    </div>
+    
+    <div class="soundboard" id="soundboard">
+        <!-- Sound items will be added by JavaScript -->
+    </div>
+    
+    <script>
+        // Sound data - you can add more items here
+        const sounds = [
+            {
+                name: "Bell",
+                image: "https://img.freepik.com/free-vector/bell-notification-background_23-2147671661.jpg?semt=ais_hybrid&w=740",
+                sound: "https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3"
+            },
+            {
+                name: "Drum",
+                image: "https://images.unsplash.com/photo-1519892300165-cb5542fb47c7?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80",
+                sound: "https://audio-previews.elements.envatousercontent.com/files/196220671/preview.mp3"
+            },
+            {
+                name: "Guitar",
+                image: "https://images.unsplash.com/photo-1541689592655-f5f52825a3b8?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80",
+                sound: "https://www.soundjay.com/misc/sounds/acoustic-guitar-01.mp3"
+            },
+            {
+                name: "Whistle",
+                image: "https://images.unsplash.com/photo-1511499767150-a48a237f0083?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80",
+                sound: "https://www.soundjay.com/misc/sounds/whistle-01.mp3"
+            },
+            {
+                name: "Car Horn",
+                image: "https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80",
+                sound: "https://www.soundjay.com/misc/sounds/car-horn-01.mp3"
+            },
+            {
+                name: "Alarm",
+                image: "https://images.unsplash.com/photo-1558002038-1055907df827?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80",
+                sound: "https://www.soundjay.com/misc/sounds/alarm-clock-01.mp3"
+            }
+        ];
+        
+        // Global variables
+        let audioElements = [];
+        let globalVolume = 0.7;
+        
+        // Initialize the soundboard
+        function initSoundboard() {
+            const soundboard = document.getElementById('soundboard');
+            
+            sounds.forEach((sound, index) => {
+                // Create audio element
+                const audio = new Audio(sound.sound);
+                audio.volume = globalVolume;
+                audioElements.push(audio);
+                
+                // Create sound item
+                const soundItem = document.createElement('div');
+                soundItem.className = 'sound-item';
+                soundItem.dataset.index = index;
+                
+                soundItem.innerHTML = `
+                    <img src="${sound.image}" alt="${sound.name}">
+                    <p>${sound.name}</p>
+                `;
+                
+                // Add click event
+                soundItem.addEventListener('click', () => {
+                    // Stop all other sounds
+                    stopAllSounds();
+                    // Play this sound
+                    audio.currentTime = 0;
+                    audio.play();
+                });
+                
+                soundboard.appendChild(soundItem);
+            });
+            
+            // Set up controls
+            document.getElementById('stop-all').addEventListener('click', stopAllSounds);
+            document.getElementById('mute-all').addEventListener('click', toggleMute);
+            document.getElementById('volume').addEventListener('input', updateVolume);
+        }
+        
+        // Stop all playing sounds
+        function stopAllSounds() {
+            audioElements.forEach(audio => {
+                audio.pause();
+                audio.currentTime = 0;
+            });
+        }
+        
+        // Toggle mute for all sounds
+        function toggleMute() {
+            const muteButton = document.getElementById('mute-all');
+            const isMuted = muteButton.textContent.includes('Unmute');
+            
+            audioElements.forEach(audio => {
+                audio.muted = !isMuted;
+            });
+            
+            muteButton.textContent = isMuted ? 'Mute All' : 'Unmute All';
+        }
+        
+        // Update volume for all sounds
+        function updateVolume() {
+            globalVolume = parseFloat(this.value);
+            audioElements.forEach(audio => {
+                audio.volume = globalVolume;
+            });
+        }
+        
+        // Initialize when page loads
+        window.addEventListener('DOMContentLoaded', initSoundboard);
+    </script>
+</body>
+</html>
